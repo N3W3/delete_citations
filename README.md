@@ -229,6 +229,7 @@ L'arborescence suit les standards modernes de packaging Python (`src-layout`) :
 
 ```text
 delete_citation/
+├── LICENSE                     # Licence MIT
 ├── pyproject.toml              # Configuration du projet, métadonnées, scripts et pytest
 ├── requirements.txt            # Dépendances de développement (pytest, pytest-cov)
 ├── README.md                   # Documentation complète du projet
@@ -272,4 +273,4 @@ flowchart LR
 
 ## 📄 Licence
 
-Ce projet est distribué sous licence open-source libre d'utilisation. Vous êtes libre de l'adapter et de l'intégrer dans vos propres flux de travail.
+Ce projet est distribué sous licence MIT. Consultez le fichier [LICENSE](file:///home/newe/Documents/dev/python/delete_citation/LICENSE) pour plus de détails.

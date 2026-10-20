@@ -7,6 +7,7 @@ name = "delete-citations"
 version = "0.1.0"
 description = "Outil de suppression des citations [cite ...] dans les fichiers .tex, .org, .odt, etc."
 authors = [{ name = "newe" }]
+license = { text = "MIT" }
 requires-python = ">=3.10"
 dependencies = []
 
