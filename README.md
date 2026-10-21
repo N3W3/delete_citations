@@ -1,276 +1,425 @@
 # 🧹 Delete Citations (`delete-citations`)
 
+[![PyPI Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](pyproject.toml)
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
-[![Tests](https://img.shields.io/badge/tests-31%20passed-success.svg)](#-tests-et-qualité-du-code)
-[![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen.svg)](#-tests-et-qualité-du-code)
+[![Tests](https://img.shields.io/badge/tests-64%20passed-success.svg)](#-testing-and-code-quality)
+[![Coverage](https://img.shields.io/badge/coverage-98%25-brightgreen.svg)](#-testing-and-code-quality)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Code style](https://img.shields.io/badge/code%20style-pep8-informational.svg)](https://peps.python.org/pep-0008/)
 
-**Delete Citations** est un utilitaire Python léger, rapide et fiable conçu pour détecter, nettoyer ou remplacer automatiquement les balises de citations (telles que `[cite 1]`, `[cite:42]`, `[cite: 99]`) dans des documents textuels.
+**Delete Citations** is a modern, lightweight, fast, and ultra-reliable Python utility designed to **automatically detect, remove, or replace citation tags** (such as `[cite 1]`, `[cite:42]`, `[cite: 99]`) within standalone text documents or **recursively across entire directory trees**.
 
-Que vous travailliez avec du **LaTeX** (`.tex`), de l'**Org-mode** (`.org`), du **Markdown** (`.md`) ou du **texte brut**, cet outil vous permet de purifier vos écrits en un clin d'œil, soit directement en **ligne de commande (CLI)**, soit au sein de vos propres **scripts Python**.
+Whether you are managing a multi-file **LaTeX** thesis project, an **Obsidian / Markdown** note vault, **Org-mode** documents, or plain text files, this tool lets you clean up your writing instantly, either via its **Command-Line Interface (CLI)** or through its **typed Python API**.
 
 ---
 
-## 📑 Sommaire
+## 📑 Table of Contents
 
-- [Pourquoi ce projet ?](#-pourquoi-ce-projet-)
-- [Fonctionnalités principales](#-fonctionnalités-principales)
-- [Formats de citations reconnus](#-formats-de-citations-reconnus)
+- [Why this project?](#-why-this-project)
+- [Key Features](#-key-features)
+- [What's New in Version 0.2.0](#-whats-new-in-version-020)
+- [Supported Citation Formats](#-supported-citation-formats)
 - [Installation](#-installation)
-  - [Prérequis](#prérequis)
-  - [Option A : Installation utilisateur standard](#option-a--installation-utilisateur-standard)
-  - [Option B : Installation pour le développement](#option-b--installation-pour-le-développement)
-- [Guide d'utilisation](#-guide-dutilisation)
-  - [1. Utilisation en Ligne de Commande (CLI)](#1-utilisation-en-ligne-de-commande-cli)
-  - [2. Utilisation en tant que Bibliothèque Python](#2-utilisation-en-tant-que-bibliothèque-python)
-- [Tests et Qualité du code](#-tests-et-qualité-du-code)
-- [Structure du Projet](#-structure-du-projet)
-- [Guide de Contribution et Méthode TDD](#-guide-de-contribution-et-méthode-tdd)
-- [Licence](#-licence)
+  - [Prerequisites](#prerequisites)
+  - [Standard Installation](#standard-installation)
+  - [Development Installation](#development-installation)
+- [Command-Line Interface (CLI) Guide](#-command-line-interface-cli-guide)
+  - [1. Single File Processing](#1-single-file-processing)
+  - [2. Recursive Directory Processing](#2-recursive-directory-processing)
+  - [3. Extension Filtering](#3-extension-filtering)
+  - [4. Dry-Run Mode (`--dry-run`)](#4-dry-run-mode---dry-run)
+  - [5. Custom Replacement (`--replace`)](#5-custom-replacement---replace)
+  - [6. Verbose and Quiet Modes](#6-verbose-and-quiet-modes)
+  - [CLI Options Summary](#cli-options-summary)
+- [Python API Usage Guide](#-python-api-usage-guide)
+  - [1. Recursive Directory Management with `Directory`](#1-recursive-directory-management-with-directory)
+  - [2. File Manipulation with `File`](#2-file-manipulation-with-file)
+  - [3. Pure Functions with `cleaner`](#3-pure-functions-with-cleaner)
+- [Testing and Code Quality](#-testing-and-code-quality)
+- [Project Structure](#-project-structure)
+- [Contribution Guide and TDD Workflow](#-contribution-guide-and-tdd-workflow)
+- [License](#-license)
 
 ---
 
-## 🎯 Pourquoi ce projet ?
+## 🎯 Why this project?
 
-Certains éditeurs de texte, plateformes de recherche, convertisseurs de documents ou modèles d'IA insèrent des annotations de citations au format brut `[cite 1]`, `[cite: 2]`, etc. 
+Certain text editors, research platforms, document converters, and AI assistants insert raw citation markers like `[cite 1]`, `[cite: 2]`, etc.
 
-Supprimer manuellement ces dizaines de balises dans un document de recherche de 50 pages est une tâche fastidieuse, répétitive et sujette à l'erreur (risque d'effacer par mégarde de vrais crochets comme des indices de tableaux `[0]` ou des liens Markdown). 
+Cleaning up these tags manually across research papers or large-scale writing projects with dozens of subfiles (`chapters/`, `appendices/`, `notes/`) is:
+1. **Extremely time-consuming** and repetitive.
+2. **Risky**: manual find-and-replace can easily break legitimate brackets (e.g., array indices like `array[0]`, mathematical equations, or Markdown links `[text](url)`).
 
-**Delete Citations** automatise ce nettoyage avec précision grâce à une expression régulière ciblée, sans endommager le reste de vos documents.
-
----
-
-## ✨ Fonctionnalités principales
-
-- 🔍 **Détection ciblée** : Identifie les balises de citations numériques sans interférer avec vos crochets normaux (`[12]`, `[texte]`, liens, etc.).
-- 💻 **Interface en Ligne de Commande (CLI)** : Une commande unique `delete-citations` prête à l'emploi.
-- 🛡️ **Sécurité des données** : Écrase le fichier d'origine ou exporte le résultat dans un nouveau fichier (`-o` / `--output`).
-- 🐍 **API Python claire et typée** : Une classe `File` pour manipuler facilement vos fichiers et des fonctions pures (`detect_citations`, `remove_citations`, `replace_citations`).
-- ⚡ **Remplacement personnalisé** : Possibilité de supprimer la balise ou de la substituer par un texte ou placeholder de votre choix.
-- 🧪 **Testé et robuste** : Suite de tests complète (31 tests unitaires et d'intégration) avec une couverture de code supérieure à 95 %.
+**Delete Citations** automates this cleanup with high precision using a targeted regular expression that preserves all other bracket styles, while supporting lightning-fast recursive directory processing.
 
 ---
 
-## 🔎 Formats de citations reconnus
+## ✨ Key Features
 
-L'expression régulière par défaut (`\[cite:?\s*[0-9]+\]`) prend en charge une large variété de notations courantes :
+- 🌳 **Recursive Directory Processing**: Automatically traverses entire subfolder trees.
+- 🔍 **Targeted Detection**: Identifies only numerical citation tags without interfering with legitimate brackets (`[0]`, `[note]`, links, source code).
+- 🛡️ **Data Safety & Mirror Export**: Modify files in place (*in-place*) or export the fully cleaned hierarchy to a separate output directory (`-o / --output`), leaving original files untouched.
+- ⚡ **Safe Dry-Run Mode (`--dry-run`)**: Preview exact numbers of modified files and detected citations without modifying any file on disk.
+- 🎯 **Smart Filtering**: Built-in support for common text and document formats (`.tex`, `.org`, `.md`, `.txt`, `.typ`, `.rmd`, `.rst`, `.bib`), with options to specify custom extensions (`-e`).
+- 🛑 **Automatic Technical Folder Exclusion**: Automatically skips `.git`, `.venv`, `__pycache__`, `node_modules`, and other temporary/build directories.
+- 🔄 **Custom Replacement**: Delete tags cleanly or replace them with a marker of your choice (e.g., `[CITATION]` or `(source)`).
+- 🐍 **Comprehensive & Typed Python API**: `Directory` and `File` classes, pure utility functions, and structured result dataclasses (`BatchResult`, `FileReport`).
+- 🧪 **Production Quality**: 64 automated tests, **98%** test coverage, strict typing.
 
-| Format de citation | Exemple | Détecté & Supprimé ? |
+---
+
+## 🚀 What's New in Version 0.2.0
+
+- ✨ **Full Directory Support**: Pass directories directly to `delete-citations`.
+- 🔁 **Automatic Recursive Traversal**: Process entire directory trees in a single command (can be disabled with `--no-recursive`).
+- 🪞 **Mirror Export**: When `-o <folder>` is specified, the full directory structure is mirrored with cleaned files, leaving source files unchanged.
+- 🔬 **Dry-Run Simulation Mode `--dry-run` / `-n`**: Preview changes before modifying anything.
+- 🏷️ **Extension Filters `-e` / `--extension`** and global processing mode `-a / --all`.
+- 📊 **New `Directory` Class** integrated into the Python API.
+
+---
+
+## 🔎 Supported Citation Formats
+
+The default regular expression (`\[cite:?\s*[0-9]+\]`) supports a wide variety of common citation notations:
+
+| Citation Format | Example | Detected & Cleaned? |
 | :--- | :--- | :---: |
-| Format classique avec espace | `[cite 1]` |  Oui |
-| Format compact sans espace | `[cite1]` |  Oui |
-| Format avec deux-points | `[cite:1]` |  Oui |
-| Format avec deux-points et espace | `[cite: 42]` |  Oui |
-| Nombres à plusieurs chiffres | `[cite 12345]` |  Oui |
+| Standard format with space | `[cite 1]` | Yes |
+| Compact format without space | `[cite1]` | Yes |
+| Org-mode format with colon | `[cite:1]` | Yes |
+| Format with colon and space | `[cite: 42]` | Yes |
+| Multi-digit numbers | `[cite 123456]` | Yes |
 
-### 🛡️ Préservation des faux-positifs
-Les éléments suivants **ne sont pas touchés** afin de préserver votre contenu :
-- `[12]` *(crochets numériques standards / indices de code)*
-- `[cite]` ou `[cite ]` *(balise incomplète sans identifiant)*
-- `[cite article]` *(balise textuelle non prise en compte par défaut)*
-- `(cite 1)` *(parenthèses classiques)*
+### 🛡️ False-Positive Protection
+The following patterns are **never touched**:
+- `[12]` *(array indices, vectors)*
+- `[cite]` or `[cite ]` *(incomplete tags without numbers)*
+- `[cite article]` *(citations with textual identifiers outside the target pattern)*
+- `[Title](link.md)` *(Markdown links)*
+- `(cite 1)` *(standard parentheses)*
 
 ---
 
 ## 📦 Installation
 
-### Prérequis
-- **Python 3.10** ou version supérieure installé sur votre machine.
+### Prerequisites
+- **Python 3.10** or higher.
 
-### Option A : Installation utilisateur standard
+### Standard Installation
 
-Clonez le dépôt puis installez le paquet localement :
+From the root directory of the cloned repository:
 
 ```bash
-git clone https://github.com/votre-nom/delete_citation.git
-cd delete_citation
 pip install .
 ```
 
-La commande `delete-citations` est alors immédiatement accessible dans votre terminal.
+The `delete-citations` CLI tool is immediately ready to use in your environment.
 
-### Option B : Installation pour le développement
+### Development Installation
 
-Pour modifier le code, exécuter les tests ou contribuer :
+To work on the codebase, run tests, or contribute:
 
 ```bash
-# 1. Cloner le projet
+# 1. Clone the repository
 git clone https://github.com/votre-nom/delete_citation.git
 cd delete_citation
 
-# 2. Créer et activer un environnement virtuel
+# 2. Create and activate a virtual environment
 python3 -m venv .venv
-source .venv/bin/activate    # Sur Linux / macOS
-# ou : .venv\Scripts\activate # Sur Windows
+source .venv/bin/activate    # Linux / macOS
+# or: .venv\Scripts\activate # Windows
 
-# 3. Installer en mode éditable avec les dépendances de dev
+# 3. Install in editable mode with development dependencies
 pip install -e ".[dev]"
-# ou alternativement : pip install -r requirements.txt
 ```
 
 ---
 
-## 📖 Guide d'utilisation
+## 📖 Command-Line Interface (CLI) Guide
 
-### 1. Utilisation en Ligne de Commande (CLI)
+### 1. Single File Processing
 
-Le projet fournit une commande exécutable intuitive : `delete-citations`.
-
-#### Nettoyer un fichier sur place (in-place)
-Par défaut, la commande modifie directement le fichier d'origine :
+#### In-place cleanup
 ```bash
 delete-citations document.tex
 ```
-*Sortie :*
+*Output:*
 ```text
 3 citation(s) détectée(s).
 Fichier sauvegardé avec succès dans : document.tex
 ```
 
-#### Sauvegarder dans un nouveau fichier de sortie
-Pour préserver votre fichier d'origine et générer une copie propre :
+#### Save to a new file
 ```bash
-delete-citations document.tex -o document_propre.tex
-```
-
-#### Afficher l'aide
-```bash
-delete-citations --help
+delete-citations document.tex -o document_cleaned.tex
 ```
 
 ---
 
-### 2. Utilisation en tant que Bibliothèque Python
+### 2. Recursive Directory Processing
 
-Vous pouvez importer `delete_citations` directement dans vos scripts Python.
+You can pass any folder containing your project files:
 
-#### Approche Orientée Objet avec la classe `File`
+#### In-place cleanup across the whole directory tree
+```bash
+delete-citations ./my_project/
+```
+*Output:*
+```text
+Traitement terminé : 18 fichier(s) analysé(s), 6 modifié(s), 24 citation(s) supprimée(s).
+```
 
-Idéal pour charger, inspecter, modifier et sauvegarder un fichier en quelques lignes :
+#### Export to a new mirror directory (leaving source untouched)
+```bash
+delete-citations ./my_project/ -o ./my_project_cleaned/
+```
+*The full subfolder structure is replicated in `my_project_cleaned/` with cleaned files.*
+
+#### Disable recursion (top-level directory only)
+```bash
+delete-citations ./my_project/ --no-recursive
+```
+
+---
+
+### 3. Extension Filtering
+
+By default, `delete-citations` scans common academic and text document formats (`.tex`, `.org`, `.md`, `.txt`, `.typ`, `.rmd`, `.rst`, `.bib`, etc.).
+
+#### Specify one or more target extensions
+```bash
+# Process only LaTeX files
+delete-citations ./my_project/ -e .tex
+
+# Process Org-mode and Markdown files
+delete-citations ./my_project/ -e .org .md
+```
+
+#### Process all files without extension filtering
+```bash
+delete-citations ./my_project/ --all
+```
+
+---
+
+### 4. Dry-Run Mode (`--dry-run`)
+
+Preview what the command will do without modifying any file on disk:
+
+```bash
+delete-citations ./my_project/ --dry-run
+```
+*Output:*
+```text
+[Simulation] Traitement terminé : 18 fichier(s) analysé(s), 6 modifié(s), 24 citation(s) supprimée(s).
+```
+
+---
+
+### 5. Custom Replacement (`--replace`)
+
+Instead of deleting citation tags, substitute them with a custom replacement string:
+
+```bash
+delete-citations ./my_project/ --replace "[REF]"
+```
+
+---
+
+### 6. Verbose and Quiet Modes
+
+- **Detailed file-by-file reporting (`-v` / `--verbose`)**:
+  ```bash
+  delete-citations ./my_project/ -v
+  ```
+  *Shows the status for each file (`[MODIFIÉ]`, `[INTACT]`, `[ERREUR]`).*
+
+- **Quiet mode (`-q` / `--quiet`)**:
+  ```bash
+  delete-citations ./my_project/ -q
+  ```
+  *Hides all informational messages and only outputs critical errors.*
+
+---
+
+### CLI Options Summary
+
+| Option | Shortcut | Description |
+| :--- | :---: | :--- |
+| `CHEMIN` / `PATH` | — | Target file or directory to process *(required)* |
+| `--output` | `-o` | Destination file or directory |
+| `--recursive` | `-r` | Recursively traverse subdirectories *(enabled by default)* |
+| `--no-recursive`| — | Disable recursive directory traversal |
+| `--extension` | `-e` | Filter files by extension (e.g., `-e .tex .md`) |
+| `--all` | `-a` | Process all files without filtering by extension |
+| `--dry-run` | `-n` | Dry-run mode (no writes to disk) |
+| `--replace` | — | Replacement text for citations |
+| `--pattern` | `-p` | Custom regular expression pattern to detect citations |
+| `--verbose` | `-v` | Display detailed report for each processed file |
+| `--quiet` | `-q` | Quiet mode (display errors only) |
+| `--version` | — | Display version number |
+| `--help` | `-h` | Display help message and exit |
+
+---
+
+## 🐍 Python API Usage Guide
+
+The `delete_citations` package integrates smoothly into custom scripts and automated data pipelines.
+
+### 1. Recursive Directory Management with `Directory`
+
+```python
+from delete_citations import Directory
+
+# 1. Initialize directory manager
+directory = Directory(
+    "my_project/",
+    extensions=[".tex", ".md"],  # Optional: filter by extension
+    recursive=True               # Optional: enabled by default
+)
+
+# 2. Collect matching files
+files = directory.collect_files()
+print(f"{len(files)} file(s) found.")
+
+# 3. Detect citations without modifying files
+citations = directory.detection()
+for path, citation_list in citations.items():
+    print(f"{path.name}: {len(citation_list)} citation(s)")
+
+# 4. Remove citations in-place
+report = directory.suppression()
+print(f"Modified: {report.total_files_modified}, Citations removed: {report.total_citations_removed}")
+
+# 5. Or export to a mirrored destination directory:
+# directory.suppression(destination="my_clean_project/")
+
+# 6. Or substitute with a custom placeholder:
+# directory.remplacer(replacement="[REF]")
+```
+
+### 2. File Manipulation with `File`
 
 ```python
 from delete_citations import File
 
-# 1. Charger le fichier
-doc = File("chapitre1.tex")
+doc = File("chapter1.tex")
 
-# 2. Inspecter les citations présentes
+# Detect
 citations = doc.detection()
-print(f"Trouvé : {citations}")
-# Exemple de sortie : ['[cite 1]', '[cite:42]']
+print(citations)  # e.g.: ['[cite 1]', '[cite:2]']
 
-# 3. Supprimer toutes les citations
+# Remove
 doc.suppression()
 
-# 4. Ou les remplacer par un marqueur personnalisé :
-# doc.remplacer(replacement="[RÉFÉRENCE]")
-
-# 5. Sauvegarder (écrase le fichier d'origine ou vers une nouvelle destination)
-doc.sauvegarde("chapitre1_clean.tex")
+# Save (in-place or to a new destination)
+doc.sauvegarde("chapter1_clean.tex")
 ```
 
-#### Approche Fonctionnelle avec `cleaner`
-
-Si vous travaillez directement sur des chaînes de caractères en mémoire :
+### 3. Pure Functions with `cleaner`
 
 ```python
 from delete_citations import detect_citations, remove_citations, replace_citations
 
-texte = "L'algorithme A* [cite 1] optimise la recherche de chemin [cite:2]."
+text = "The experiment [cite 1] confirms the hypothesis [cite:42]."
 
-# Détection
-print(detect_citations(texte))
-# Résultat : ['[cite 1]', '[cite:2]']
+# Detection
+print(detect_citations(text))
+# -> ['[cite 1]', '[cite:42]']
 
-# Suppression
-texte_nettoye = remove_citations(texte)
-print(texte_nettoye)
-# Résultat : "L'algorithme A*  optimise la recherche de chemin ."
+# Removal
+print(remove_citations(text))
+# -> "The experiment  confirms the hypothesis ."
 
-# Remplacement avec un texte personnalisé
-texte_remplace = replace_citations(texte, replacement="(source)")
-print(texte_remplace)
-# Résultat : "L'algorithme A* (source) optimise la recherche de chemin (source)."
+# Replacement
+print(replace_citations(text, replacement="(ref)"))
+# -> "The experiment (ref) confirms the hypothesis (ref)."
 ```
 
 ---
 
-## 🧪 Tests et Qualité du code
+## 🧪 Testing and Code Quality
 
-Le projet applique une rigueur stricte grâce à **`pytest`** et **`pytest-cov`**.
+The project adheres to strict testing standards using **`pytest`** and **`pytest-cov`**.
 
-### Exécuter la suite complète de tests
 ```bash
-pytest
-```
-
-### Afficher les détails des tests exécutés
-```bash
+# Run all tests with verbose output
 pytest -v
-```
 
-### Vérifier la couverture de code (Code Coverage)
-```bash
+# Check code coverage
 pytest --cov=delete_citations --cov-report=term-missing
 ```
 
-### Exécuter un module de test ciblé
-```bash
-pytest tests/test_cleaner.py  # Tests unitaires de la regex et du nettoyage
-pytest tests/test_file.py     # Tests de la classe File (lecture, écriture)
-pytest tests/test_main.py     # Tests du comportement de la CLI
+### Test Suite Results
+
+```text
+============================== 64 passed in 0.16s ==============================
+
+Name                                Stmts   Miss Branch BrPart  Cover   Missing
+-------------------------------------------------------------------------------
+src/delete_citations/__init__.py        4      0      0      0   100%
+src/delete_citations/cleaner.py         9      0      0      0   100%
+src/delete_citations/directory.py     108      1     38      1    99%
+src/delete_citations/file/file.py      31      0      2      0   100%
+src/delete_citations/main.py           69      2     34      3    95%
+-------------------------------------------------------------------------------
+TOTAL                                 221      3     74      4    98%
 ```
 
 ---
 
-## 📁 Structure du Projet
+## 📁 Project Structure
 
-L'arborescence suit les standards modernes de packaging Python (`src-layout`) :
+The codebase strictly follows the modern Python `src-layout` standard:
 
 ```text
 delete_citation/
-├── LICENSE                     # Licence MIT
-├── pyproject.toml              # Configuration du projet, métadonnées, scripts et pytest
-├── requirements.txt            # Dépendances de développement (pytest, pytest-cov)
-├── README.md                   # Documentation complète du projet
+├── LICENSE                         # MIT Open Source License
+├── pyproject.toml                  # Metadata, packaging, scripts, and pytest configuration
+├── requirements.txt                # Development dependencies
+├── README.md                       # Comprehensive documentation
 ├── src/
 │   └── delete_citations/
-│       ├── __init__.py         # Point d'exposition des classes et fonctions publiques
-│       ├── cleaner.py          # Logique pure : expressions régulières et transformations
-│       ├── main.py             # Point d'entrée de l'interface en ligne de commande (CLI)
+│       ├── __init__.py             # Public API entry point
+│       ├── cleaner.py              # Pure logic: regex, detection, removal, replacement
+│       ├── directory.py            # Directory class: recursive traversal, filtering, and batch processing
+│       ├── main.py                 # CLI entry point for delete-citations
 │       └── file/
 │           ├── __init__.py
-│           └── file.py         # Classe File pour la manipulation de fichiers sur disque
+│           └── file.py             # File class: single file handling and I/O
 └── tests/
-    ├── conftest.py             # Fixtures pytest (création de fichiers temporaires isolés)
-    ├── test_cleaner.py         # Tests unitaires sur les fonctions de nettoyage de chaînes
-    ├── test_file.py            # Tests d'intégration sur la lecture/écriture de fichiers
-    └── test_main.py            # Tests fonctionnels des arguments et flux CLI
+    ├── conftest.py                 # Pytest fixtures and temporary environment setup
+    ├── test_cleaner.py             # Unit tests for regex and string transformations
+    ├── test_directory.py           # Integration tests for recursive directory processing
+    ├── test_file.py                # Unit and I/O tests for the File class
+    └── test_main.py                # End-to-end CLI functional tests (arguments, options, exit codes)
 ```
 
 ---
 
-## 🤝 Guide de Contribution et Méthode TDD
+## 🤝 Contribution Guide and TDD Workflow
 
-Les contributions, signalements de bugs et propositions d'améliorations sont les bienvenus !
+Contributions, bug reports, and feature requests are very welcome!
 
-Le projet encourage vivement la pratique du **TDD (Test-Driven Development)** :
+The project strictly follows the **TDD (Test-Driven Development)** cycle:
 
 ```mermaid
 flowchart LR
-    A["1. ROUGE<br/>Écrire un test qui échoue<br/>(tests/)"] --> B["2. VERT<br/>Écrire le code minimal<br/>(src/)"]
-    B --> C["3. REFACTOR<br/>Nettoyer et optimiser le code"]
+    A["1. RED<br/>Write a failing unit test<br/>(tests/)"] --> B["2. GREEN<br/>Write the minimal code to pass<br/>(src/)"]
+    B --> C["3. REFACTOR<br/>Clean up and optimize code"]
     C --> A
 ```
 
-1. **Écrivez d'abord un test** : Ajoutez le cas d'usage souhaité dans `tests/` (ex: supporter un format tel que `[cite @auteur2024]`).
-2. **Exécutez `pytest`** : Constatez que le test échoue (**Rouge**).
-3. **Implémentez la fonctionnalité** : Modifiez l'expression régulière ou le code dans `src/delete_citations/`.
-4. **Relancez `pytest`** : Validez que tous les tests passent désormais (**Vert**).
-5. **Nettoyez et commitez** : Vos modifications sont protégées contre les régressions.
+1. **Create a branch** for your feature or bugfix: `git checkout -b feature/my-feature`.
+2. **Write the test first** in `tests/`.
+3. **Verify the test fails** with `pytest`.
+4. **Implement the code** under `src/delete_citations/`.
+5. **Verify that all tests pass** (**64/64**) and that coverage remains above 95%.
+6. **Open a Pull Request**.
 
 ---
 
-## 📄 Licence
+## 📄 License
 
-Ce projet est distribué sous licence MIT. Consultez le fichier [LICENSE](file:///home/newe/Documents/dev/python/delete_citation/LICENSE) pour plus de détails.
+This project is licensed under the terms of the [MIT License](file:///home/newe/Documents/dev/python/delete_citation/LICENSE). You are free to use, modify, and distribute it without restriction.
